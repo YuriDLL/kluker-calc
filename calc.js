@@ -27,6 +27,12 @@ let start_parameters = [
     [22, "VR-Кандибобер", 2000, 50000],
     [23, "В самый раз", 400, 5500],
     [24, "Зерновой прогноз", 900, 8000],
+    [25, "Голубиная почта", 800, 12000],
+    [26, "Голубка Пикассо", 400, 5000],
+    [27, "Пурпурный пояс", 3000, 25000],
+    [28, "Реальная мотивация", 1700, 20000],
+    [29, "Золотой запас", 300, 5000],
+    [30, "Тинэйдж Мутант Нинзя Клюкер", 1500, 50000],
 ];
 show_columns = ['number', 'name', 'level', 'payback', 'income', 'cost'];
 sort = {'column': 'name', 'direction': 'up'};
@@ -83,13 +89,14 @@ function createRow(boost_state) {
     let row = document.createElement("tr");
     show_columns.forEach(field => {
         let column = document.createElement("td");
-        if (field === 'payback')
+        if (field === 'name' || field === 'level' || field === 'number')
         {
-            column.textContent = boost_state[field].toFixed(2);
+            column.textContent = boost_state[field];
         }
         else
         {
-            column.textContent = boost_state[field];
+            // 2.2.toPrecision(4)
+            column.textContent = boost_state[field].toPrecision(4);
         }
 
         if (field === 'level')
