@@ -45,81 +45,42 @@ start_parameters.forEach(boost => {
         "level": 0,
         "income": boost[2],
         "cost": boost[3],
-        "next_cost_scale": cost_start_scale,
     };
     state_boost.payback = state_boost.cost / state_boost.income;
     state.push(state_boost);
 })
 
-function create_button(parent, name, sign) {
-    let button = document.createElement("button");
-    button.className = 'btn btn-primary';
-    button.textContent = sign;
-    button.onclick = function () {
-        edit_row = state.find((a) => a.name === name);
-        if (sign === '+')
-        {
-            edit_row.level += 1;
-            edit_row.income *= income_scale;
-            edit_row.cost *= edit_row.next_cost_scale;
-            edit_row.next_cost_scale *= cost_scale_scale;
-        }
-        else
-        {
-            edit_row.level -= 1;
-            if (edit_row.level < 0)
-            {
-                edit_row.level = 0;
-            }
-            else
-            {
-                edit_row.income /= income_scale;
-                edit_row.next_cost_scale /= cost_scale_scale;
-                edit_row.cost /= edit_row.next_cost_scale;
-            }
-        }
-        
-        edit_row.payback = edit_row.cost / edit_row.income;
-        update_table();
-    }
-    parent.append(button);
-}
-
 function createRow(boost_state) {
     let row = document.createElement("tr");
     show_columns.forEach(field => {
         let column = document.createElement("td");
-        if (field === 'name' || field === 'level' || field === 'number')
+        if (field === 'name' || field === 'number')
         {
             column.textContent = boost_state[field];
         }
-        else
+        else if (field === 'level')
         {
-            // 2.2.toPrecision(4)
-            column.textContent = boost_state[field].toPrecision(4);
-        }
-
-        if (field === 'level')
-        {
-            create_button(column, boost_state.name, '+');
-            create_button(column, boost_state.name, '-');
-        }
+            let input = document.createElement("input");
+            input.className = 'form-control';
+            input.type = 'number';
+            input.value = boost_state[field];
             
+            input.addEventListener('input', function (e) {
+                if (e.target.value < 0)
+                    e.target.value = 0;
+                row = input.parentElement.parentElement;
+                update_boost(row);
+            })
+            column.append(input);
+        }
         row.append(column);
     });
-    
+    update_boost(row);
     return row;
 }
 
 function update_table() {
-    if (sort.direction === 'up')
-    {
-        state.sort((a, b) => (a[sort.column] - b[sort.column]));
-    }
-    else
-    {
-        state.sort((a, b) => (b[sort.column] - a[sort.column]));
-    }
+    sort_stat();
     table = document.getElementById("main-table")
     table.innerHTML = "";
     state.forEach(boost => {
@@ -136,6 +97,62 @@ function change_sort(field_name) {
     sort.column = field_name;
     sort.direction = direction;
     update_table();
+}
+
+function update_boost(row) {
+    number =  parseInt(row.childNodes[0].textContent);
+    old_index = state.findIndex((a) => a.number === number);
+    let updated_boost = state[old_index];
+
+    let boost_start_parameters = start_parameters.find((a) => a[0] === number);
+    let boost_start_income = boost_start_parameters[2];
+    
+    updated_boost.level = parseInt(row.childNodes[2].childNodes[0].value);
+    updated_boost.income = boost_start_income * Math.pow(income_scale, updated_boost.level);
+    let cost_scale = cost_start_scale;
+    let cost = boost_start_parameters[3];
+    for (let i = 0; i < updated_boost.level; i++) {
+        cost *= cost_scale;
+        cost_scale *= cost_scale_scale;
+    }
+    updated_boost.cost = cost;
+    updated_boost.payback = updated_boost.cost / updated_boost.income;
+
+    row.childNodes[3].textContent = updated_boost.payback.toPrecision(4);
+    row.childNodes[4].textContent = updated_boost.income.toPrecision(4);
+    row.childNodes[5].textContent = updated_boost.cost.toPrecision(4);
+
+    sort_stat();
+    new_index = state.findIndex((a) => a.number === number);
+    if (new_index != old_index)
+    {
+        let table = document.getElementById("main-table");
+        row.remove();
+        if (new_index === 0)
+        {
+            table.prepend(row);
+        }
+        else
+        {
+            let prev_number = state[new_index - 1].number;
+            table.childNodes.forEach(prev_row => {
+                if (parseInt(prev_row.childNodes[0].textContent) == prev_number){
+                    prev_row.after(row);
+                }
+            })
+        }
+    }
+}
+
+function sort_stat(){
+    if (sort.direction === 'up')
+    {
+        state.sort((a, b) => (a[sort.column] - b[sort.column]));
+    }
+    else
+    {
+        state.sort((a, b) => (b[sort.column] - a[sort.column]));
+    }
 }
 
 update_table();
