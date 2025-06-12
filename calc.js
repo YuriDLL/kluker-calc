@@ -3,6 +3,7 @@ let income_scale = 1.07;
 let cost_start_scale = 1.1025;
 let cost_scale_scale = 1.05;
 let start_parameters = [
+    ["Звук успеха", 768, 6140],
     ["Умный выбор", 731, 5850],
     ["S-класс", 100, 833],
     ["Детективно", 200, 1400],
